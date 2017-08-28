@@ -10,13 +10,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class StartActivity extends AppCompatActivity {
 
     private Button mButton;
+    private Button mButtonToMain;
     private ImageView mImageView;
     private final int IMAGE_RESULT = 1;
+    private Bitmap mBitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,14 +27,30 @@ public class StartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start);
 
         mButton = (Button) findViewById(R.id.buttonToGallary);
+        mButtonToMain = (Button) findViewById(R.id.ButtonToMain);
         mImageView = (ImageView) findViewById(R.id.imageView);
-        mButton.setOnClickListener(new View.OnClickListener() {
+
+        View.OnClickListener onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent,IMAGE_RESULT);
+
+                if (view.getId() == R.id.buttonToGallary) {
+                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(intent, IMAGE_RESULT);
+                } else {
+                    Intent intent = new Intent(StartActivity.this, MainActivity.class);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    mBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+
+                    intent.putExtra("image", byteArray);
+                    startActivity(intent);
+                }
             }
-        });
+        };
+
+        mButton.setOnClickListener(onClickListener);
+        mButtonToMain.setOnClickListener(onClickListener);
     }
 
     @Override
@@ -40,8 +59,8 @@ public class StartActivity extends AppCompatActivity {
         if (requestCode == IMAGE_RESULT){
             if (resultCode == Activity.RESULT_OK){
                 try {
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
-                    mImageView.setImageBitmap(bitmap);
+                    mBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), data.getData());
+                    mImageView.setImageBitmap(mBitmap);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
