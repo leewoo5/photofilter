@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/image_save"
-        android:title="Item"
+        android:title="@string/item_save"
         android:icon="@android:drawable/ic_menu_save"
         app:showAsAction="ifRoom"
     />

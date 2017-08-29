@@ -1,11 +1,16 @@
 package com.example.leewoo5629.photofilter;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +25,7 @@ import com.zomato.photofilters.imageprocessors.Filter;
 
 import java.util.List;
 
+
 public class MainActivity extends AppCompatActivity implements ThumbnailCallback {
     static {
         System.loadLibrary("NativeImageProcessor");
@@ -29,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements ThumbnailCallback
     private RecyclerView thumbListView;
     private ImageView placeHolderImageView;
     private Bitmap mBitmap;
+    private Bitmap mCurrentBitmap;
+    private final int CODE_WRITE_EXTERNAL_STORAGE = 1;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -39,7 +47,23 @@ public class MainActivity extends AppCompatActivity implements ThumbnailCallback
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
+        // Handle item selection
+        if (item.getItemId()==R.id.image_save){
+            // implementation
+            if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CALENDAR)
+                    != PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(this,
+                        new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE }, CODE_WRITE_EXTERNAL_STORAGE);
+            }
+            MediaStore.Images.Media.insertImage(
+                    getContentResolver(),
+                    mCurrentBitmap,
+                    "title",
+                    "description");
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -127,15 +151,15 @@ public class MainActivity extends AppCompatActivity implements ThumbnailCallback
             }
         };
         handler.post(r);
-    }
 
+    }
     @Override
     public void onThumbnailClick(Filter filter) {
-        placeHolderImageView.setImageBitmap(filter.processFilter(Bitmap.createScaledBitmap(
-//                BitmapFactory.decodeResource(
-//                        this.getApplicationContext().getResources(),
-//                        R.drawable.photo),
+        mCurrentBitmap = filter.processFilter(Bitmap.createScaledBitmap(
+                //BitmapFactory.decodeResource(this.getApplicationContext().getResources(), R.drawable.photo),
                 mBitmap,
-                640, 640, false)));
+                640, 640, false));
+        placeHolderImageView.setImageBitmap(mCurrentBitmap);
     }
 }
+
